@@ -40,6 +40,31 @@ public class ArgParser {
     return successfulParse;
   }
 
+
+  public Boolean isGeneratingEmailTemplate() {
+    return argCheck.get(EMAIL_TAG);
+  }
+
+  public Boolean isGeneratingLetterTemplate() {
+    return argCheck.get(LETTER_TAG);
+  }
+
+  public String getEmailTemplateFileName(){
+    return argsThatRequireAFileName.get(EMAIL_TEMPLATE_TAG);
+  }
+
+  public String getLetterTemplateFileName(){
+    return argsThatRequireAFileName.get(LETTER_TEMPLATE_TAG);
+  }
+
+  public String getCsvFile(){
+    return argsThatRequireAFileName.get(CSV_FILE_TAG);
+  }
+
+  public String getOutputDir(){
+    return argsThatRequireAPath.get(OUTPUT_DIR_TAG);
+  }
+
   /**
    * Resets this object to its original state
    */
@@ -90,12 +115,15 @@ public class ArgParser {
 
       //Checks for unrecognized arguments:
       if(!requiresFileName(lastArg) && !requiresPath(lastArg) & !argCheck.containsKey(arg)) {
-        outputMessage += "Argument \"" + arg + "\" not recognised.\n";
+        outputMessage += "Argument \"" + arg + "\" not recognized.\n";
       }
 
       updateArgumentExistence(arg);
       lastArg = arg;
     }
+
+
+    outputMessage += checkForErrors();
 
     // For checking... delete later
     for(String arg : argCheck.keySet()) {
@@ -105,8 +133,6 @@ public class ArgParser {
     for(String arg : argsThatRequireAFileName.keySet()) {
       System.out.println(arg + ": " + argsThatRequireAFileName.get(arg));
     }
-
-    outputMessage += checkForErrors();
 
     if(outputMessage.isEmpty()){
       successfulParse = true;
@@ -160,9 +186,11 @@ public class ArgParser {
       if(argCheck.get(arg)) {
         if(argsThatRequireAFileName.containsKey(arg) && notValidFileName(argsThatRequireAFileName.get(arg))) {
           outputMessage +=  ("\"" + argsThatRequireAFileName.get(arg) + "\"" + " is not a valid filename for the " + "\"" +  arg + "\"" + " argument.\n");
+          argsThatRequireAFileName.put(arg,null);
         }
         if(argsThatRequireAPath.containsKey(arg) && notValidPath(argsThatRequireAPath.get(arg))) {
           outputMessage +=  ("\"" + argsThatRequireAPath.get(arg) + "\"" + " is not a valid path for the " + "\"" +  arg + "\"" + " argument.\n");
+          argsThatRequireAPath.put(arg,null);
         }
       }
     }
