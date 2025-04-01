@@ -2,17 +2,37 @@ package problem1.cli;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
 public class ArgParser {
 
+  private static final String HELP_TAG = "--help";
   private static final String EMAIL_TAG = "--email";
   private static final String EMAIL_TEMPLATE_TAG = "--email-template";
   private static final String LETTER_TAG = "--letter";
   private static final String LETTER_TEMPLATE_TAG = "--letter-template";
   private static final String OUTPUT_DIR_TAG = "--output-dir";
   private static final String CSV_FILE_TAG = "--csv-file";
+  private static HashMap<String, String> helpTextCommands;
+  //Help Texts
+  static {
+    helpTextCommands = new HashMap<>() {{
+      put("FIRST_MESSAGE",
+          "This program processes document templates by inserting personalized details from a csv file. \n"
+          + "For each record, it automatically fills in designated placeholders with names and other relevant information, \n"
+          + "creating fully customized documents efficiently.");
+      put(CSV_FILE_TAG, "Designates the location of the CSV file containing records. Requires a Filename argument immediately following.");
+      put(EMAIL_TAG, "Indicates that email documents will be generated. When " + EMAIL_TAG + " is used, an " + EMAIL_TEMPLATE_TAG + " must be used as well.");
+      put(EMAIL_TEMPLATE_TAG, "Used to specify the location of the email template. Requires a Filename argument immediately following.");
+      put(HELP_TAG, "Prints this help message.");
+      put(LETTER_TAG, "Indicates that letter documents will be generated. When " + LETTER_TAG + " is used, a " + LETTER_TEMPLATE_TAG + " must be used as well.");
+      put(LETTER_TEMPLATE_TAG, "Used to specify the location of the letter template. Requires a Filename argument immediately following.");
+      put(OUTPUT_DIR_TAG, "The output directory used to write the generated documents. Requires a Filename argument immediately following.");
+      put("FINAL_MESSAGE", "\n ** Please note that " +EMAIL_TAG + " and " + LETTER_TAG + " require a " + OUTPUT_DIR_TAG + " directory specified. **");
+    }};
+  }
 
   private static final String REGEX_VALID_FILE = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+\\.\\w+";
   private static final String REGEX_VALID_DIRECTORY = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+(\\\\|\\/)";
@@ -66,7 +86,8 @@ public class ArgParser {
   }
 
   /**
-   * Resets this object to its original state
+   * Helper method. Resets this object to its original state.
+   *
    */
   private void resetValues() {
     this.successfulParse = false;
@@ -78,6 +99,7 @@ public class ArgParser {
     argCheck.put(LETTER_TEMPLATE_TAG,false);
     argCheck.put(OUTPUT_DIR_TAG,false);
     argCheck.put(CSV_FILE_TAG,false);
+    argCheck.put(HELP_TAG,false);
 
     argsThatRequireAFileName.clear();
     argsThatRequireAFileName.put(EMAIL_TEMPLATE_TAG,null);
@@ -102,6 +124,10 @@ public class ArgParser {
     resetValues();
 
     if (args.length == 0) {
+      this.successfulParse = false;
+      return this.successfulParse;
+    }else if(args[0].equals(HELP_TAG)) {
+      displayHelpText();
       this.successfulParse = false;
       return this.successfulParse;
     }
@@ -140,8 +166,27 @@ public class ArgParser {
     }else {
       successfulParse = false;
       System.out.println("\nErrors were encountered when attempting to parse arguments:\n" + outputMessage);
+      System.out.println("For help on using program and viable commands, use --help as first argument.");
     }
     return successfulParse;
+  }
+
+  /**
+   * Helper method. Displays help text
+   */
+  private void displayHelpText() {
+
+    ArrayList<String> alphabeticCommands = new ArrayList<>(argCheck.keySet());
+    Collections.sort(alphabeticCommands);
+
+    System.out.println("\n\n********** HELP TEXT **********\n");
+    System.out.println(helpTextCommands.get("FIRST_MESSAGE"));
+    System.out.println("\nValid Tags:");
+    for(String tag : alphabeticCommands) {
+      System.out.printf("%-20s %s\n", tag, helpTextCommands.get(tag));
+    }
+    System.out.println(helpTextCommands.get("FINAL_MESSAGE"));
+    System.out.println("\n********** END HELP **********\n\n");
   }
 
   /**
