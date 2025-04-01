@@ -8,15 +8,20 @@ import java.util.regex.Pattern;
 
 public class ArgParser {
 
+  private static final String REGEX_VALID_FILE = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+\\.\\w+";
+  private static final String REGEX_VALID_DIRECTORY = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+(\\\\|\\/)";
+
   private static final String HELP_TAG = "--help";
+  private static final String CAPTURE_INPUT_TAG = "--show-captured-input";
   private static final String EMAIL_TAG = "--email";
   private static final String EMAIL_TEMPLATE_TAG = "--email-template";
   private static final String LETTER_TAG = "--letter";
   private static final String LETTER_TEMPLATE_TAG = "--letter-template";
   private static final String OUTPUT_DIR_TAG = "--output-dir";
   private static final String CSV_FILE_TAG = "--csv-file";
-  private static HashMap<String, String> helpTextCommands;
+
   //Help Texts
+  private static HashMap<String, String> helpTextCommands;
   static {
     helpTextCommands = new HashMap<>() {{
       put("FIRST_MESSAGE",
@@ -33,9 +38,6 @@ public class ArgParser {
       put("FINAL_MESSAGE", "\n ** Please note that " +EMAIL_TAG + " and " + LETTER_TAG + " require a " + OUTPUT_DIR_TAG + " directory specified. **");
     }};
   }
-
-  private static final String REGEX_VALID_FILE = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+\\.\\w+";
-  private static final String REGEX_VALID_DIRECTORY = "(([A-Za-z]:)|(\\.|\\.\\.))((\\/|\\\\)\\w+)+(\\\\|\\/)";
 
   private Boolean successfulParse; // Keeps track if last parse was successful
 
@@ -60,27 +62,50 @@ public class ArgParser {
     return successfulParse;
   }
 
-
+  /**
+   * Returns true if email argument was specified
+   * @return {@code Boolean}
+   */
   public Boolean isGeneratingEmailTemplate() {
     return argCheck.get(EMAIL_TAG);
   }
 
+  /**
+   * Returns true if letter argument was specified
+   * @return {@code Boolean}
+   */
   public Boolean isGeneratingLetterTemplate() {
     return argCheck.get(LETTER_TAG);
   }
 
+  /**
+   * Returns the filename for the email template if provided
+   * @return template file name as {@code String}
+   */
   public String getEmailTemplateFileName(){
     return argsThatRequireAFileName.get(EMAIL_TEMPLATE_TAG);
   }
 
+  /**
+   * Returns the filename for the letter template if provided
+   * @return template file name as {@code String}
+   */
   public String getLetterTemplateFileName(){
     return argsThatRequireAFileName.get(LETTER_TEMPLATE_TAG);
   }
 
+  /**
+   * Returns the filename for the csv file containing the records if provided
+   * @return file name as {@code String}
+   */
   public String getCsvFile(){
     return argsThatRequireAFileName.get(CSV_FILE_TAG);
   }
 
+  /**
+   * Returns the output directory where files will be saved if provided
+   * @return output directory as {@code String}
+   */
   public String getOutputDir(){
     return argsThatRequireAPath.get(OUTPUT_DIR_TAG);
   }
@@ -100,6 +125,7 @@ public class ArgParser {
     argCheck.put(OUTPUT_DIR_TAG,false);
     argCheck.put(CSV_FILE_TAG,false);
     argCheck.put(HELP_TAG,false);
+    argCheck.put(CAPTURE_INPUT_TAG,false);
 
     argsThatRequireAFileName.clear();
     argsThatRequireAFileName.put(EMAIL_TEMPLATE_TAG,null);
@@ -123,9 +149,12 @@ public class ArgParser {
   public Boolean parse(String[] args) {
     resetValues();
 
+    //Exit if no args were given.
     if (args.length == 0) {
       this.successfulParse = false;
       return this.successfulParse;
+
+    //Display help text and ignore rest if --help is first argument
     }else if(args[0].equals(HELP_TAG)) {
       displayHelpText();
       this.successfulParse = false;
@@ -144,22 +173,20 @@ public class ArgParser {
         outputMessage += "Argument \"" + arg + "\" not recognized.\n";
       }
 
-      updateArgumentExistence(arg);
+      if(!updateArgumentExistence(arg)){
+        outputMessage += "Argument \"" + arg + "\" was provided multiple times.\n";
+      }
       lastArg = arg;
     }
 
-
     outputMessage += checkForErrors();
 
-    // For checking... delete later
-    for(String arg : argCheck.keySet()) {
-      System.out.println(arg + ": " + argCheck.get(arg));
-    }
-    System.out.println("Values:");
-    for(String arg : argsThatRequireAFileName.keySet()) {
-      System.out.println(arg + ": " + argsThatRequireAFileName.get(arg));
+    // Display captured input if specified:
+    if(argCheck.get(CAPTURE_INPUT_TAG)) {
+      showCapturedInput();
     }
 
+    // Assess (Based on generated errors) whether parse was successful. Display messages.
     if(outputMessage.isEmpty()){
       successfulParse = true;
       System.out.println("Successfully parsed arguments!");
@@ -172,13 +199,29 @@ public class ArgParser {
   }
 
   /**
-   * Helper method. Displays help text
+   * Helper method. Displays captured input. Useful for debugging
+   */
+  private void showCapturedInput(){
+    System.out.println("\n\n********** CAPTURED INPUT **********\n");
+    for(String arg : argCheck.keySet()) {
+      System.out.println(arg + ": " + argCheck.get(arg));
+    }
+    System.out.println("Values:");
+    for(String arg : argsThatRequireAFileName.keySet()) {
+      System.out.println(arg + ": " + argsThatRequireAFileName.get(arg));
+    }
+  }
+
+  /**
+   * Helper method. Displays help text.
    */
   private void displayHelpText() {
 
+    // Sort commands alphabetically
     ArrayList<String> alphabeticCommands = new ArrayList<>(argCheck.keySet());
     Collections.sort(alphabeticCommands);
 
+    //Print help text using helpTextCommands hashmap:
     System.out.println("\n\n********** HELP TEXT **********\n");
     System.out.println(helpTextCommands.get("FIRST_MESSAGE"));
     System.out.println("\nValid Tags:");
@@ -244,47 +287,87 @@ public class ArgParser {
   }
 
   /**
-   * Checks if an argument requires a fileName
-   * @param arg
-   * @return
+   * Helper method. Checks if a specific argument requires a fileName to be specified.
+   * @param arg argument to query
+   * @return true if arg requires a fileName, false otherwise as {@code boolean}
    */
   private boolean requiresFileName(String arg) {
     return argsThatRequireAFileName.containsKey(arg);
   }
 
+  /**
+   * Helper method. Checks if a specific argument requires a path or directory to be specified.
+   * @param arg argument to query
+   * @return true if arg requires a path, false otherwise as {@code boolean}
+   */
   private boolean requiresPath(String arg) {
     return argsThatRequireAPath.containsKey(arg);
   }
 
-  private void updateArgumentExistence(String arg) {
+  /**
+   * Helper method. Updates hashMap to track that a command was given.
+   * Ignores if arg does not exist in Map.
+   * @param arg argument to track
+   * @return false if argument was already given, true otherwise.
+   */
+  private Boolean updateArgumentExistence(String arg) {
     if(argCheck.containsKey(arg)) {
+      if(argCheck.get(arg)) {
+        return false;
+      }
       argCheck.put(arg,true);
     }
+    return true;
   }
 
+  /**
+   * Helper method. Some arguments require a filename. If one is provided, saves the provided
+   * @param arg argument
+   * @param path filename
+   */
   private void assignFileName(String arg, String path) {
     if(argsThatRequireAFileName.containsKey(arg)) {
       argsThatRequireAFileName.put(arg,path);
     }
   }
 
+  /**
+   * Helper method. Some arguments require a path. If one is provided, saves the provided
+   * @param arg argument
+   * @param path path
+   */
   private void assignPath(String arg, String path) {
     if(argsThatRequireAPath.containsKey(arg)) {
       argsThatRequireAPath.put(arg,path);
     }
   }
 
-
+  /**
+   * Helper method. Uses regex to check if a given string is an invalid file name
+   * @param path file name to evaluate
+   * @return true if not valid, false otherwise as {@code boolean}
+   */
   private boolean notValidFileName(String path) {
     if (path == null || isAnArgument(path)) return true;
     return !Pattern.compile(REGEX_VALID_FILE).matcher(path).matches();
   }
 
+  /**
+   * Helper method. Uses regex to check if a given string is an invalid path name
+   * @param path path name to evaluate
+   * @return true if not valid, false otherwise as {@code boolean}
+   */
   private boolean notValidPath(String path) {
     if (path == null || isAnArgument(path)) return true;
     return !Pattern.compile(REGEX_VALID_DIRECTORY).matcher(path).matches();
   }
 
+  /**
+   * Helper method. Used to determine if a given argument is in the list of reserved arguments.
+   * Useful when differentiating if inputs are valid
+   * @param value argument to evaluate
+   * @return true if value is a reserved argument, false otherwise as {@code boolean}
+   */
   private boolean isAnArgument(String value) {
     return argCheck.containsKey(value);
   }
