@@ -11,7 +11,7 @@ public class Theater {
   private ArrayList<Row> rowList = new ArrayList<>();
   private ArrayList<Integer> wheelChairRowsList;
 
-  private Theater(String theaterName, ArrayList<Row> rows) throws IllegalArgumentException {
+  public Theater(String theaterName, ArrayList<Row> rows) throws IllegalArgumentException {
     validateTheaterName(theaterName);
     validateRowList(rows);
 
@@ -59,6 +59,16 @@ public class Theater {
 
   public ArrayList<Row> getRowList() {
     return rowList;
+  }
+
+  public Boolean isRowWheelChairAccessible(Integer rowNumber) {
+    return wheelChairRowsList.contains(rowNumber);
+  }
+
+  public void printSeats(){
+    for(Row row : rowList){
+      //print row
+    }
   }
 
   @Override

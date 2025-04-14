@@ -5,21 +5,20 @@ import java.util.Objects;
 
 public class Row extends ArrayList<Seat> {
 
-  private final static Integer MAX_SEATS = 5;
+  private final static Integer MAX_SEATS = 10;
   private final static Integer MIN_SEATS = 1;
   private final static Integer MIN_ROW = 1;
-  private final static Integer MAX_ROW = 5;
+  private final static Integer MAX_ROW = 15;
 
   private Integer rowNumber;
   private Integer numSeats;
   private Boolean wheelChairAccessible;
 
-  public Row(Integer rowNumber, Integer numSeats, Boolean wheelChairAccessible) throws IllegalArgumentException {
+  public Row(Integer rowNumber, ArrayList<Seat> seats, Boolean wheelChairAccessible) throws IllegalArgumentException {
     validateRowNumber(rowNumber);
-    validateNumSeats(numSeats);
 
+    this.importSeats(seats);
     this.rowNumber = rowNumber;
-    this.numSeats = numSeats;
     this.wheelChairAccessible = wheelChairAccessible;
   }
 
@@ -33,6 +32,12 @@ public class Row extends ArrayList<Seat> {
       throw new IllegalArgumentException("Number of seats must be between " + MIN_SEATS + " and " + MAX_SEATS);
   }
 
+  private void importSeats(ArrayList<Seat> seats) throws IllegalArgumentException {
+    validateNumSeats(seats.size());
+    this.addAll(seats);
+    numSeats = seats.size();
+  }
+
   public Integer getRowNumber() {
     return rowNumber;
   }
@@ -43,6 +48,16 @@ public class Row extends ArrayList<Seat> {
 
   public Boolean getWheelChairAccessible() {
     return wheelChairAccessible;
+  }
+
+  public void printRow(){
+    System.out.printf("%3s",this.getRowNumber());
+    for(Seat seat : this){
+      if(seat.isReserved()) {
+        System.out.print(" X");
+      }else System.out.print(" _");
+    }
+    System.out.print("\n");
   }
 
   @Override
