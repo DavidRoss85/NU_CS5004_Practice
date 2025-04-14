@@ -1,15 +1,15 @@
 package hw9;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class Theater {
 
+  private static final Integer MIN_WHEELCHAIR_ROWS = 1;
 
   private String theaterName;
   private ArrayList<Row> rowList = new ArrayList<>();
-  private ArrayList<Integer> wheelChairRowsList;
+  private ArrayList<Integer> wheelChairRowsList = new ArrayList<>();
 
   public Theater(String theaterName, ArrayList<Row> rows) throws IllegalArgumentException {
     validateTheaterName(theaterName);
@@ -17,7 +17,6 @@ public class Theater {
 
     this.theaterName = theaterName;
     this.rowList = rows;
-    this.wheelChairRowsList = copyWheelChairRowsList(rows);
   }
 
   private void validateTheaterName(String theaterName) throws IllegalArgumentException {
@@ -26,27 +25,29 @@ public class Theater {
   }
 
   private void validateRowList(ArrayList<Row> rowList) throws IllegalArgumentException {
+
     if(rowList == null || rowList.isEmpty())
       throw new IllegalArgumentException("A theater should have at least one row");
 
-    //Ensure no duplicate rows:
     ArrayList<Integer> importedRowNums = new ArrayList<>();
     for (Row row : rowList) {
+
+      //Ensure no duplicate rows:
       if(importedRowNums.contains(row.getRowNumber())){
         throw new IllegalArgumentException("Duplicate row number in row list");
       }
       importedRowNums.add(row.getRowNumber());
+      updateWheelChairRowsList(row);
     }
+
+    if( wheelChairRowsList.size() < MIN_WHEELCHAIR_ROWS)
+      throw new IllegalArgumentException("A theater must include at least " + MIN_WHEELCHAIR_ROWS + " wheel chair accessible rows");
   }
 
-  private ArrayList<Integer> copyWheelChairRowsList(ArrayList<Row> rowList) {
-    ArrayList<Integer> wheelChairRowsList = new ArrayList<>();
-    for (Row row : rowList) {
-      if(row.getWheelChairAccessible()){
-        wheelChairRowsList.add(row.getRowNumber());
-      }
+  private void updateWheelChairRowsList(Row row) {
+    if(row.isWheelChairAccessible()){
+      wheelChairRowsList.add(row.getRowNumber());
     }
-    return wheelChairRowsList;
   }
 
   public ArrayList<Integer> getWheelChairRowsList() {
@@ -66,8 +67,8 @@ public class Theater {
   }
 
   public void printSeats(){
-    for(Row row : rowList){
-      //print row
+    for(Row row: getRowList()){
+      row.printRow();
     }
   }
 

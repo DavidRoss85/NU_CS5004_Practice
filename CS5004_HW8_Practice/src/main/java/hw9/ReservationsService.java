@@ -10,8 +10,6 @@ public class ReservationsService {
   }
 
   private void displaySeatAssignments(Theater theater) {
-    for(Row row: theater.getRowList()){
-      row.printRow();
-    }
+    theater.printSeats();
   }
 }

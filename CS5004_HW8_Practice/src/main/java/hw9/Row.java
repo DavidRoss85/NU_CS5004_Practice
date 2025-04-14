@@ -9,10 +9,10 @@ import java.util.Objects;
  */
 public class Row extends ArrayList<Seat> {
 
-  private final static Integer MAX_SEATS = 10;
+  private final static Integer MAX_SEATS = 20;
+  private final static Integer MAX_ROW = 20;
   private final static Integer MIN_SEATS = 1;
   private final static Integer MIN_ROW = 1;
-  private final static Integer MAX_ROW = 15;
 
   private Integer rowNumber;
   private Integer numSeats;
@@ -41,7 +41,7 @@ public class Row extends ArrayList<Seat> {
    */
   private void validateRowNumber(Integer rowNumber) throws IllegalArgumentException {
     if(rowNumber < MIN_ROW || rowNumber > MAX_ROW)
-      throw new IllegalArgumentException("Row cannot be less than " + MIN_ROW + " and greater than " + MAX_ROW);
+      throw new IllegalArgumentException("Number of rows must fall between " + MIN_ROW + " and " + MAX_ROW);
   }
 
   /**
@@ -89,7 +89,7 @@ public class Row extends ArrayList<Seat> {
    *
    * @return {@code true} if the row is wheelchair accessible, {@code false} otherwise.
    */
-  public Boolean getWheelChairAccessible() {
+  public Boolean isWheelChairAccessible() {
     return wheelChairAccessible;
   }
 
@@ -102,7 +102,7 @@ public class Row extends ArrayList<Seat> {
       if(seat.isReserved()) {
         System.out.print(" X");
       } else {
-        System.out.print(" _");
+        System.out.print(wheelChairAccessible? " =":" _");
       }
     }
     System.out.print("\n");

@@ -1,6 +1,7 @@
 package hw9;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class ReservationsSystem {
 
@@ -9,20 +10,35 @@ public class ReservationsSystem {
     Integer MAX_ROWS = 15;
     Integer MAX_SEATS = 10;
 
-    ArrayList<Row> rows = new ArrayList<>();
-    for (int i = 0; i < MAX_ROWS; i++) {
-      ArrayList<Seat> seats = new ArrayList<>();
-      for (int j = 0; j < MAX_SEATS; j++) {
-        seats.add(new Seat("Seat-" + i + "-" + j,"Available", false));
-      }
-      Row row = new Row(i+1,seats, true);
-      rows.add(row);
-    }
-    Theater theater = new Theater("This Theater",rows);
-
     ReservationsService reservationsService = new ReservationsService();
-    reservationsService.begin(theater);
+
+    Theater theater = generateRandomTheater("This Theater", MAX_ROWS, MAX_SEATS);
+    if(theater != null) {
+      reservationsService.begin(theater);
+    }
 
 
+  }
+
+  private static Theater generateRandomTheater(String name, int rows, int seats) {
+    Theater theater = null;
+
+    try{
+    ArrayList<Row> rowsList = new ArrayList<>();
+    for (int i = 0; i < rows; i++) {
+      ArrayList<Seat> seatsList = new ArrayList<>();
+      for (int j = 0; j < seats; j++) {
+        seatsList.add(new Seat("Seat-" + i + "-" + j,"Available", false));
+      }
+      Row row = new Row(i+1,seatsList, new Random().nextBoolean());
+      rowsList.add(row);
+    }
+
+      theater = new Theater(name, rowsList);
+    }catch(Exception e){
+      System.out.println("Error generating theater:\n" + e.getMessage());
+
+    }
+    return theater;
   }
 }
